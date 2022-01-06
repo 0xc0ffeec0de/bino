@@ -2,35 +2,30 @@ package neoengine
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/0xc0ffeec0de/bino/pkg/r2pipe"
 )
 
-type Register struct {
-	RegName string
-	Arch    int
-	Mode    int
-}
-
-type EmulationProfile struct {
-	Binary       *Binary
-	StartAddress uint
-	UntilAddress uint
-	NumSteps     uint
-	// hooks []CustomHooks
-	IgnoreExtCalls  bool
-	MonitorRegister []Register
-	ReadRegister    Register
-}
-
-func (e *EmulationProfile) Emulate() {
+func (e *EmulationProfile) Emulate() (Context, error) {
 	var pipe *r2pipe.Pipe = e.Binary.r2
 
 	// Set up ESIL
-	pipe.Cmd("aei;aeim")
-	pipe.Cmd(fmt.Sprintf("s %d\n", e.StartAddress))
+	pipe.Cmd(fmt.Sprintf("s %s\n", e.StartAddress))
+	pipe.Cmd("aei;aeim;aeip")
 
-	// var i uint = 0
-	// var steps := e.unt
-	// for ; i <
+	for {
+		pipe.Cmd("aeso;so 1") // emu and seek 1
+		currentAddr, _ := pipe.Cmd("s")
+		currentAddr = strings.Trim(currentAddr, "\n")
+		if currentAddr == e.UntilAddress {
+			pipe.Cmd("aeso") // last emu
+			break
+		}
+	}
+
+	ctx := Context{
+		RegisterState: e.Binary.Getx8664RegState(),
+	}
+	return ctx, nil
 }

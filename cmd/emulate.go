@@ -12,10 +12,12 @@ import (
 
 type Emulation struct {
 	binaryPath string
-	startAddr  uint
-	numInst    uint
-	endAddr    uint
-	logSteps   bool
+	startAddr  string
+	endAddr    string
+
+	numInst   uint
+	logSteps  bool
+	untilCall string
 }
 
 var emulationStruct = Emulation{}
@@ -26,7 +28,7 @@ var emulateCmd = &cobra.Command{
 	Short: "Emulate binary executable files",
 	Args: func(cmd *cobra.Command, args []string) error {
 
-		if emulationStruct.startAddr == 0 {
+		if emulationStruct.startAddr == "0x0" {
 			return errors.New("a start address is needed")
 		}
 		return nil
@@ -42,25 +44,40 @@ var emulateCmd = &cobra.Command{
 		// TODO: Create a log library
 		fmt.Printf("Opening %s...\n", target)
 		if err := binary.Open(target); err != nil {
-			log.Fatal("Error: %v\n", err)
+			log.Fatalf("Error: %v\n", err)
 		}
 
 		emuProfile := neoengine.EmulationProfile{}
 		emuProfile.Binary = binary
+
+		// Remove "0x" prefix in hex addresses
+
+		// Move values converted to the profile structu
 		emuProfile.StartAddress = emulationStruct.startAddr
 		emuProfile.UntilAddress = emulationStruct.endAddr
 
-		emuProfile.Emulate()
+		// Emulate
+		cpuState, err := emuProfile.Emulate()
 
-		// neoEngine.Emulate(emulationStruct.startAddr, 4)
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		fmt.Println("Reading content of RDI...")
+		data, err := binary.ReadStrAt(uint(cpuState.RegisterState.RDI))
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("RDI => %s\n", data)
 	},
 }
 
 func init() {
 	emulateCmd.Flags().StringVar(&emulationStruct.binaryPath, "binary", "", "Binary path to be analyzed and emulated")
-	emulateCmd.Flags().UintVar(&emulationStruct.startAddr, "start-at", 0, "Start address of the emulation")
-	emulateCmd.Flags().UintVar(&emulationStruct.endAddr, "until", 0, "Emulate until this address")
+	emulateCmd.Flags().StringVar(&emulationStruct.startAddr, "start-at", "0x0", "Start address of the emulation")
+	emulateCmd.Flags().StringVar(&emulationStruct.endAddr, "until", "0x0", "Emulate until this address")
+	emulateCmd.Flags().StringVar(&emulationStruct.untilCall, "until-call", "", "Emulate until a function call")
 	emulateCmd.Flags().UintVar(&emulationStruct.numInst, "num-instructions", 0, "Number of instructions to emulate")
 	emulateCmd.Flags().BoolVar(&emulationStruct.logSteps, "log", false, "Log each step emulated")
 }

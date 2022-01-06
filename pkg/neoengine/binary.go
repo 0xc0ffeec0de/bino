@@ -2,14 +2,12 @@ package neoengine
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/0xc0ffeec0de/bino/pkg/r2pipe"
-)
 
-type Binary struct {
-	r2   *r2pipe.Pipe
-	path string
-}
+	"encoding/json"
+)
 
 func NewBinary() *Binary {
 	return &Binary{}
@@ -22,7 +20,7 @@ func (n *Binary) Open(binaryPath string) error {
 		return err
 	}
 	n.r2 = r2
-
+	n.path = binaryPath
 	// Quiet mode
 
 	// Set up the in memory cache and code analysis
@@ -31,19 +29,22 @@ func (n *Binary) Open(binaryPath string) error {
 	return nil
 }
 
-func (n *Binary) Emulate(startAddress uint, numInstructions uint) {
-	// reset state machine and start the stack
-	n.r2.Cmd("aei;aeim")
+func (n *Binary) ReadStrAt(address uint) (string, error) {
+	cmd := fmt.Sprintf("ps @ %d", address)
+	str, err := n.r2.Cmd(cmd)
 
-	// seek
+	return str, err
+}
 
-	var i uint = 0
-	for ; i < numInstructions; i++ {
-		out, err := n.r2.Cmd("aeso; aer")
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		fmt.Println(out)
+func (n *Binary) Getx8664RegState() x8664Registers {
+	// Get current register state
+	regs, err := n.r2.Cmd("aerj")
+	if err != nil {
+		log.Fatalln(err)
 	}
+	regsByteArray := []byte(regs)
+	registers := x8664Registers{}
+	json.Unmarshal(regsByteArray, &registers)
+
+	return registers
 }

@@ -17,6 +17,8 @@ void decrypt() {
     output[i] = enc_data[i] ^ enc_key[i % enc_key_size];
   }
 
+    
+  // print the call arguments
   puts(output);
 }
 
