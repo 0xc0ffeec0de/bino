@@ -10,7 +10,12 @@ import (
 var (
 	rootCmd = &cobra.Command{
 		Use:   "Bino",
-		Short: "Emulate binary executable code blocks, add custom hooks and create emulation recipes to be shared across researchers",
+		Short: "Emulate binary executable code easily",
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				cmd.Root().Help()
+			}
+		},
 	}
 )
 
@@ -22,5 +27,5 @@ func Execute() {
 }
 
 func init() {
-
+	rootCmd.AddCommand(emulateCmd)
 }

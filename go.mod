@@ -1,4 +1,4 @@
-module github.com/0xc0ffeec0de/Bino
+module github.com/0xc0ffeec0de/bino
 
 go 1.17
 
