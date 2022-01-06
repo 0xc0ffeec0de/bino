@@ -47,15 +47,11 @@ var emulateCmd = &cobra.Command{
 			log.Fatalf("Error: %v\n", err)
 		}
 
-		emuProfile := neoengine.EmulationProfile{}
-		emuProfile.Binary = binary
-
-		// Remove "0x" prefix in hex addresses
-
-		// Move values converted to the profile structu
-		emuProfile.StartAddress = emulationStruct.startAddr
-		emuProfile.UntilAddress = emulationStruct.endAddr
-
+		emuProfile := neoengine.EmulationProfile{
+			Binary:       binary,
+			StartAddress: emulationStruct.binaryPath,
+			UntilAddress: emulationStruct.endAddr,
+		}
 		// Emulate
 		cpuState, err := emuProfile.Emulate()
 

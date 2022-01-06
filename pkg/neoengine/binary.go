@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/0xc0ffeec0de/bino/pkg/r2pipe"
-
 	"encoding/json"
+
+	"github.com/0xc0ffeec0de/bino/pkg/r2pipe"
 )
 
 func NewBinary() *Binary {
