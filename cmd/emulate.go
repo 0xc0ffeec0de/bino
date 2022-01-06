@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/0xc0ffeec0de/bino/pkg/neoengine"
@@ -18,7 +19,7 @@ type Emulation struct {
 }
 
 var emulationStruct = Emulation{}
-var neoEngine *neoengine.Binary = neoengine.NewBinary()
+var binary *neoengine.Binary = neoengine.NewBinary()
 
 var emulateCmd = &cobra.Command{
 	Use:   "emulate [flags] binary",
@@ -40,11 +41,18 @@ var emulateCmd = &cobra.Command{
 		target := args[0]
 		// TODO: Create a log library
 		fmt.Printf("Opening %s...\n", target)
-		if err := neoEngine.Open(target); err != nil {
-			fmt.Printf("Error: %v\n", err)
+		if err := binary.Open(target); err != nil {
+			log.Fatal("Error: %v\n", err)
 		}
 
-		neoEngine.Emulate(emulationStruct.startAddr, 4)
+		emuProfile := neoengine.EmulationProfile{}
+		emuProfile.Binary = binary
+		emuProfile.StartAddress = emulationStruct.startAddr
+		emuProfile.UntilAddress = emulationStruct.endAddr
+
+		emuProfile.Emulate()
+
+		// neoEngine.Emulate(emulationStruct.startAddr, 4)
 
 	},
 }
