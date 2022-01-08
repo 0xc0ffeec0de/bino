@@ -1,31 +1,46 @@
 package neoengine
 
 import (
-	"fmt"
 	"strings"
-
-	"github.com/0xc0ffeec0de/bino/pkg/r2pipe"
 )
 
 func (e *EmulationProfile) Emulate() (Context, error) {
-	var pipe *r2pipe.Pipe = e.Binary.r2
+
+	if e.UntilAddress != "" {
+		e.hasKnownEnd = true
+	}
+
+	var bin *Binary = e.Binary
+	bin.SetUpEsil()
 
 	// Set up ESIL
-	pipe.Cmd(fmt.Sprintf("s %s\n", e.StartAddress))
-	pipe.Cmd("aei;aeim;aeip")
+	bin.SeekTo(e.StartAddress)
+	bin.SetUpEsil()
 
 	for {
-		pipe.Cmd("aeso;so 1") // emu and seek 1
-		currentAddr, _ := pipe.Cmd("s")
-		currentAddr = strings.Trim(currentAddr, "\n")
-		if currentAddr == e.UntilAddress {
-			pipe.Cmd("aeso") // last emu
+		bin.Step()
+		shouldCont := e.handleExec() // Apply any kind of constraints in this emulation scenario
+		if !shouldCont {
 			break
 		}
 	}
 
 	ctx := Context{
-		RegisterState: e.Binary.Getx8664RegState(),
+		RegisterState: bin.Getx8664RegState(),
 	}
 	return ctx, nil
+}
+
+func (e *EmulationProfile) handleExec() bool {
+	// First handle
+	if e.hasKnownEnd {
+		currentAddr := e.Binary.CurrentAddress()
+		currentAddr = strings.Trim(currentAddr, "\n")
+		if currentAddr == e.UntilAddress {
+			e.Binary.Step()
+			return false
+		}
+	}
+
+	return true
 }

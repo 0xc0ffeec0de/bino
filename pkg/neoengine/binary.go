@@ -48,3 +48,21 @@ func (n *Binary) Getx8664RegState() x8664Registers {
 
 	return registers
 }
+
+func (n *Binary) Step() {
+	n.r2.Cmd("aeso;so 1")
+}
+
+func (n *Binary) SetUpEsil() {
+	n.r2.Cmd("aei;aeim;aeip")
+}
+
+func (n *Binary) SeekTo(addr string) {
+	seekAddr := fmt.Sprintf("s %s", addr)
+	n.r2.Cmd(seekAddr)
+}
+
+func (n *Binary) CurrentAddress() string {
+	curr, _ := n.r2.Cmd("s")
+	return curr
+}

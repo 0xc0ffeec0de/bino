@@ -18,6 +18,8 @@ type Emulation struct {
 	numInst   uint
 	logSteps  bool
 	untilCall string
+
+	printReg []string
 }
 
 var emulationStruct = Emulation{}
@@ -27,8 +29,7 @@ var emulateCmd = &cobra.Command{
 	Use:   "emulate [flags] binary",
 	Short: "Emulate binary executable files",
 	Args: func(cmd *cobra.Command, args []string) error {
-
-		if emulationStruct.startAddr == "0x0" {
+		if emulationStruct.startAddr == "0x0" && len(args) > 0 {
 			return errors.New("a start address is needed")
 		}
 		return nil
@@ -36,7 +37,7 @@ var emulateCmd = &cobra.Command{
 
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			cmd.Root().Help()
+			cmd.Help()
 			os.Exit(1)
 		}
 
@@ -49,7 +50,7 @@ var emulateCmd = &cobra.Command{
 
 		emuProfile := neoengine.EmulationProfile{
 			Binary:       binary,
-			StartAddress: emulationStruct.binaryPath,
+			StartAddress: emulationStruct.startAddr,
 			UntilAddress: emulationStruct.endAddr,
 		}
 		// Emulate
