@@ -15,11 +15,8 @@ type Emulation struct {
 	startAddr  string
 	endAddr    string
 
-	numInst   uint
 	logSteps  bool
 	untilCall string
-
-	printReg []string
 }
 
 var emulationStruct = Emulation{}
@@ -52,6 +49,7 @@ var emulateCmd = &cobra.Command{
 			Binary:       binary,
 			StartAddress: emulationStruct.startAddr,
 			UntilAddress: emulationStruct.endAddr,
+			UntilCall:    emulationStruct.untilCall,
 		}
 		// Emulate
 		cpuState, err := emuProfile.Emulate()
@@ -75,6 +73,5 @@ func init() {
 	emulateCmd.Flags().StringVar(&emulationStruct.startAddr, "start-at", "0x0", "Start address of the emulation")
 	emulateCmd.Flags().StringVar(&emulationStruct.endAddr, "until", "0x0", "Emulate until this address")
 	emulateCmd.Flags().StringVar(&emulationStruct.untilCall, "until-call", "", "Emulate until a function call")
-	emulateCmd.Flags().UintVar(&emulationStruct.numInst, "num-instructions", 0, "Number of instructions to emulate")
 	emulateCmd.Flags().BoolVar(&emulationStruct.logSteps, "log", false, "Log each step emulated")
 }

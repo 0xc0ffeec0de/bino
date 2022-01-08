@@ -3,6 +3,8 @@ package neoengine
 import (
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 
 	"encoding/json"
 
@@ -25,6 +27,18 @@ func (n *Binary) Open(binaryPath string) error {
 
 	// Set up the in memory cache and code analysis
 	n.r2.Cmd("e io.cache=true; e bin.cache=true; aaaa 2> /dev/null")
+
+	// Map all imports
+
+	imports, _ := n.r2.Cmd("iij")
+	impList := []Import{}
+	n.imports = make(map[uint]Import)
+
+	json.Unmarshal([]byte(imports), &impList)
+
+	for _, imp := range impList {
+		n.imports[imp.Plt] = imp
+	}
 
 	return nil
 }
@@ -50,11 +64,16 @@ func (n *Binary) Getx8664RegState() x8664Registers {
 }
 
 func (n *Binary) Step() {
-	n.r2.Cmd("aeso;so 1")
+	n.r2.Cmd("aes;so 1")
 }
 
 func (n *Binary) SetUpEsil() {
 	n.r2.Cmd("aei;aeim;aeip")
+}
+
+func (n *Binary) StepOver() {
+	// n.r2.Cmd("aess; s @ rip")
+	n.r2.Cmd("so 1; aeip")
 }
 
 func (n *Binary) SeekTo(addr string) {
@@ -65,4 +84,42 @@ func (n *Binary) SeekTo(addr string) {
 func (n *Binary) CurrentAddress() string {
 	curr, _ := n.r2.Cmd("s")
 	return curr
+}
+
+func (n *Binary) GetCurrInstruction() Instruction {
+	inst := Instruction{}
+	currInst, _ := n.r2.Cmd("pdj 1 ~{0}")
+	json.Unmarshal([]byte(currInst), &inst)
+
+	return inst
+}
+
+func (n *Binary) DisasmAt(address uint, numOpcodes uint) Instruction {
+	inst := Instruction{}
+	targetInst, _ := n.r2.Cmd(fmt.Sprintf("pdj %d @ %d ~{0}", numOpcodes, address))
+	json.Unmarshal([]byte(targetInst), &inst)
+	return inst
+}
+
+func (n *Binary) FlipZeroFlagIfSet() {
+
+	zf, _ := n.r2.Cmd("?vi `aer zf`")
+	zflag, _ := strconv.ParseInt(zf, 10, 8)
+	zflag = zflag & 0 // yep, make sure to always be zero
+
+	cmd := fmt.Sprintf("aer zf=%d", zflag)
+	n.r2.Cmd(cmd)
+}
+
+func (n *Binary) NextInstAddr() uint64 {
+	nextAddrStr, _ := n.r2.Cmd("so 1; ?vi `s`")
+	nextAddrStr = strings.Trim(nextAddrStr, "\n")
+	nextAddr, _ := strconv.ParseUint(nextAddrStr, 10, 64)
+
+	return nextAddr
+}
+
+func (n *Binary) SetRegister(regName string, value uint64) {
+	cmd := fmt.Sprintf("aer %s=%d", regName, value)
+	n.r2.Cmd(cmd)
 }

@@ -3,8 +3,10 @@ package neoengine
 import "github.com/0xc0ffeec0de/bino/pkg/r2pipe"
 
 type Binary struct {
-	r2   *r2pipe.Pipe
-	path string
+	r2      *r2pipe.Pipe
+	path    string
+	imports map[uint]Import
+	retAddr uint64
 }
 
 type Register struct {
@@ -18,6 +20,7 @@ type EmulationProfile struct {
 	StartAddress string // string type because it's more easy to deal inside r2 shell
 	UntilAddress string
 	NumSteps     uint
+	UntilCall    string
 	// hooks []CustomHooks
 	IgnoreExtCalls  bool
 	MonitorRegister []Register
@@ -25,6 +28,39 @@ type EmulationProfile struct {
 
 	// "private" information for execution
 	hasKnownEnd bool
+}
+
+// Instruction struct that wrapp the current opcode information
+type Instruction struct {
+	Offset   int64  `json:"offset"`
+	Esil     string `json:"esil"`
+	Refptr   bool   `json:"refptr"`
+	FcnAddr  int64  `json:"fcn_addr"`
+	FcnLast  int64  `json:"fcn_last"`
+	Size     int    `json:"size"`
+	Opcode   string `json:"opcode"`
+	Disasm   string `json:"disasm"`
+	Bytes    string `json:"bytes"`
+	Family   string `json:"family"`
+	Type     string `json:"type"`
+	Reloc    bool   `json:"reloc"`
+	TypeNum  int    `json:"type_num"`
+	Type2Num int    `json:"type2_num"`
+	Jump     uint   `json:"jump"`
+	Fail     uint   `json:"fail"`
+	Refs     []struct {
+		Addr int64  `json:"addr"`
+		Type string `json:"type"`
+	} `json:"refs"`
+}
+
+// Import function struct
+type Import struct {
+	Ordinal int    `json:"ordinal"`
+	Bind    string `json:"bind"`
+	Type    string `json:"type"`
+	Name    string `json:"name"`
+	Plt     uint   `json:"plt"`
 }
 
 // Change to support more arch
@@ -39,6 +75,8 @@ type x8664Registers struct {
 	RCX uint64 `json:"rcx"`
 	RSI uint64 `json:"rsi"`
 	RIP uint64 `json:"rip"`
+	RBP uint64 `json:"rbp"`
+	RSP uint64 `json:"rsp"`
 	R8  uint64 `json:"r8"`
 	R9  uint64 `json:"r9"`
 	R10 uint64 `json:"r10"`
