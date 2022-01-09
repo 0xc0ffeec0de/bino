@@ -5,7 +5,6 @@
 #define enc_key_size 4
 
 const char* enc_data="\x10\x00\x02\x09\x17\x07\x06\x02\x04";
-
 const char* enc_key="\x63\x6f\x6f\x6c";
 
 
@@ -17,7 +16,6 @@ void decrypt() {
     output[i] = enc_data[i] ^ enc_key[i % enc_key_size];
   }
 
-    
   // print the call arguments
   puts(output);
 }

@@ -15,7 +15,6 @@ type Emulation struct {
 	startAddr  string
 	endAddr    string
 
-	numInst   uint
 	logSteps  bool
 	untilCall string
 }
@@ -27,8 +26,7 @@ var emulateCmd = &cobra.Command{
 	Use:   "emulate [flags] binary",
 	Short: "Emulate binary executable files",
 	Args: func(cmd *cobra.Command, args []string) error {
-
-		if emulationStruct.startAddr == "0x0" {
+		if emulationStruct.startAddr == "0x0" && len(args) > 0 {
 			return errors.New("a start address is needed")
 		}
 		return nil
@@ -36,7 +34,7 @@ var emulateCmd = &cobra.Command{
 
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			cmd.Root().Help()
+			cmd.Help()
 			os.Exit(1)
 		}
 
@@ -47,15 +45,12 @@ var emulateCmd = &cobra.Command{
 			log.Fatalf("Error: %v\n", err)
 		}
 
-		emuProfile := neoengine.EmulationProfile{}
-		emuProfile.Binary = binary
-
-		// Remove "0x" prefix in hex addresses
-
-		// Move values converted to the profile structu
-		emuProfile.StartAddress = emulationStruct.startAddr
-		emuProfile.UntilAddress = emulationStruct.endAddr
-
+		emuProfile := neoengine.EmulationProfile{
+			Binary:       binary,
+			StartAddress: emulationStruct.startAddr,
+			UntilAddress: emulationStruct.endAddr,
+			UntilCall:    emulationStruct.untilCall,
+		}
 		// Emulate
 		cpuState, err := emuProfile.Emulate()
 
@@ -78,6 +73,5 @@ func init() {
 	emulateCmd.Flags().StringVar(&emulationStruct.startAddr, "start-at", "0x0", "Start address of the emulation")
 	emulateCmd.Flags().StringVar(&emulationStruct.endAddr, "until", "0x0", "Emulate until this address")
 	emulateCmd.Flags().StringVar(&emulationStruct.untilCall, "until-call", "", "Emulate until a function call")
-	emulateCmd.Flags().UintVar(&emulationStruct.numInst, "num-instructions", 0, "Number of instructions to emulate")
 	emulateCmd.Flags().BoolVar(&emulationStruct.logSteps, "log", false, "Log each step emulated")
 }
