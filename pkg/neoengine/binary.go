@@ -29,12 +29,10 @@ func (n *Binary) Open(binaryPath string) error {
 	n.r2.Cmd("e io.cache=true; e bin.cache=true; aaaa 2> /dev/null")
 
 	// Map all imports
-
-	imports, _ := n.r2.Cmd("iij")
 	impList := []Import{}
 	n.imports = make(map[uint]Import)
 
-	json.Unmarshal([]byte(imports), &impList)
+	n.r2.Cmdj("iij", &impList)
 
 	for _, imp := range impList {
 		n.imports[imp.Plt] = imp
@@ -96,8 +94,8 @@ func (n *Binary) GetCurrInstruction() Instruction {
 
 func (n *Binary) DisasmAt(address uint, numOpcodes uint) Instruction {
 	inst := Instruction{}
-	targetInst, _ := n.r2.Cmd(fmt.Sprintf("pdj %d @ %d ~{0}", numOpcodes, address))
-	json.Unmarshal([]byte(targetInst), &inst)
+	n.r2.Cmdjf("pdj %d @ %d ~{0}", &inst, numOpcodes, address)
+
 	return inst
 }
 
@@ -112,7 +110,7 @@ func (n *Binary) FlipZeroFlagIfSet() {
 }
 
 func (n *Binary) NextInstAddr() uint64 {
-	nextAddrStr, _ := n.r2.Cmd("so 1; ?vi `s`")
+	nextAddrStr, _ := n.r2.Cmd("so 1; ?vi `s` ;so -1")
 	nextAddrStr = strings.Trim(nextAddrStr, "\n")
 	nextAddr, _ := strconv.ParseUint(nextAddrStr, 10, 64)
 

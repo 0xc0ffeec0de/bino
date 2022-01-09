@@ -1,7 +1,6 @@
 package neoengine
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -55,8 +54,6 @@ func (e *EmulationProfile) handleExec() bool {
 	if currInst.Type == "call" {
 		_, found := e.Binary.imports[currInst.Jump]
 		if found { // just ignore imp call
-			fmt.Println("Step over ", currInst.Disasm)
-
 			e.Binary.StepOver()
 		} else {
 			e.Binary.retAddr = e.Binary.NextInstAddr()
@@ -72,7 +69,6 @@ func (e *EmulationProfile) handleExec() bool {
 		// to check if is a call to __stack_chk_fail
 		// if is, ignore by flipping the ZF bit
 		asmAt := e.Binary.DisasmAt(currInst.Jump, 1)
-
 		if asmAt.Type == "call" {
 
 			imp, found := e.Binary.imports[asmAt.Jump]
