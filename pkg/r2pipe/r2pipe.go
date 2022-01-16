@@ -1,3 +1,35 @@
+// radare - LGPL - Copyright 2015 - nibble
+
+/*
+Package r2pipe allows to call r2 commands from Go. A simple hello world would
+look like the following snippet:
+
+	package main
+
+	import (
+		"fmt"
+
+		"github.com/radare/r2pipe-go"
+	)
+
+	func main() {
+		r2p, err := r2pipe.NewPipe("malloc://256")
+		if err != nil {
+			panic(err)
+		}
+		defer r2p.Close()
+
+		_, err = r2p.Cmd("w Hello World")
+		if err != nil {
+			panic(err)
+		}
+		buf, err := r2p.Cmd("ps")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(buf)
+	}
+*/
 package r2pipe
 
 import (
@@ -163,17 +195,33 @@ func (r2p *Pipe) Cmdf(f string, args ...interface{}) (string, error) {
 
 // Cmdj acts like Cmd but interprets the output of the command as json. It
 // returns the parsed json keys and values.
-func (r2p *Pipe) Cmdj(cmd string, out interface{}) (err error) {
+func (r2p *Pipe) Cmdj(cmd string) (out interface{}, err error) {
 	rstr, err := r2p.Cmd(cmd)
+	if err == nil {
+		err = json.Unmarshal([]byte(rstr), out)
+	}
+	return out, err
+}
+
+// CmdjStruct acts like Cmdjs but it will fill the interface/struct with the wanted values. It
+// returns the command execution error.
+func (r2p *Pipe) CmdjStruct(cmd string, out interface{}) (err error) {
+	rstr, err := r2p.Cmd(cmd)
+
 	if err == nil {
 		err = json.Unmarshal([]byte(rstr), out)
 	}
 	return err
 }
 
-// like cmdj but formats the command
-func (r2p *Pipe) Cmdjf(f string, out interface{}, args ...interface{}) (err error) {
-	return r2p.Cmdj(fmt.Sprintf(f, args...), out)
+//like cmdj but formats the command
+func (r2p *Pipe) Cmdjf(f string, args ...interface{}) (interface{}, error) {
+	return r2p.Cmdj(fmt.Sprintf(f, args...))
+}
+
+// like Cmdj, but besides format the command it will already fill the interface sent
+func (r2p *Pipe) CmdjfStruct(f string, out interface{}, args ...interface{}) error {
+	return r2p.CmdjStruct(fmt.Sprintf(f, args...), out)
 }
 
 // Close shuts down r2, closing the created pipe.

@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-func (e *EmulationProfile) Emulate() (Context, error) {
+func (e *EmulationProfile) Emulate() (CPU, error) {
 
 	if e.UntilAddress != "" {
 		e.hasKnownEnd = true
@@ -19,26 +19,34 @@ func (e *EmulationProfile) Emulate() (Context, error) {
 
 	for {
 		bin.Step()
-		shouldCont := e.handleExec() // Apply any kind of constraints in this emulation scenario
+		shouldCont, reason := e.handleExec() // Apply any kind of constraints in this emulation scenario
 		if !shouldCont {
+			switch reason {
+			// Just hit a hunted call, build the stack frame here
+			// because the stackframe yet exists
+			case HitCall:
+				bin.BuildStackFrame()
+			}
 			break
 		}
 	}
 
-	ctx := Context{
+	cpuCtx := CPU{
+		Bin:           bin,
 		RegisterState: bin.Getx8664RegState(),
 	}
-	return ctx, nil
+
+	return cpuCtx, nil
 }
 
-func (e *EmulationProfile) handleExec() bool {
+func (e *EmulationProfile) handleExec() (bool, FinishEmuReason) {
 	// First handle
 	if e.hasKnownEnd {
 		currentAddr := e.Binary.CurrentAddress()
 		currentAddr = strings.Trim(currentAddr, "\n")
 		if currentAddr == e.UntilAddress {
 			e.Binary.Step()
-			return false
+			return false, HitTarget
 		}
 	}
 
@@ -47,19 +55,24 @@ func (e *EmulationProfile) handleExec() bool {
 
 	// Hit invalid code aka end
 	if currInst.Type == "invalid" || currInst.Disasm == "invalid" {
-		return false
+		// e.Binary.SetRegister()
+		return false, ReachEnd
 	}
 
 	//Check if is the target call
 	if currInst.Type == "call" {
-		_, found := e.Binary.imports[currInst.Jump]
+		extCall, found := e.Binary.imports[currInst.Jump]
+
 		if found { // just ignore imp call
+			if extCall.Name == e.UntilCall {
+				return false, HitCall
+			}
 			e.Binary.StepOver()
 		} else {
 			e.Binary.retAddr = e.Binary.NextInstAddr()
 		}
 
-		return true
+		return true, Continue
 	}
 
 	// Look-ahead to bypass stack checking
@@ -78,11 +91,11 @@ func (e *EmulationProfile) handleExec() bool {
 		}
 	}
 
-	// fmt.Printf("0x%x\t%s\n", currInst.Offset, currInst.Disasm)
-
+	// intel specific
 	if currInst.Disasm == "ret" {
+
 		e.Binary.SetRegister("rsp", e.Binary.retAddr)
 	}
 
-	return true
+	return true, Continue
 }

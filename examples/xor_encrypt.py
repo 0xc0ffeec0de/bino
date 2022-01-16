@@ -5,7 +5,7 @@ import sys
 
 def to_c_bytearray(s, var_name):
     out = f'const char* {var_name}="'
-    size = f'int {var_name}_size={len(s)};'
+    size = f'#define {var_name}_size {len(s)}'
 
     for b in s:
         out += f"\\x0{hex(b)[2:]}" if b < 10 else f"\\{hex(b)[1:]}"
