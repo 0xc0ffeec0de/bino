@@ -19,7 +19,17 @@ func (n *Binary) Open(binaryPath string) error {
 	r2, err := r2pipe.NewNativePipe(binaryPath)
 
 	if err != nil {
-		return err
+		// try open non-native pip
+		if err.Error() == "Failed to open libr_core.so" {
+			log.Println("Unable to find libr_core.so, starting a radare process instead...")
+			r2, err = r2pipe.NewPipe(binaryPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+
 	}
 	n.r2 = r2
 	n.path = binaryPath
