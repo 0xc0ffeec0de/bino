@@ -10,6 +10,7 @@ type Binary struct {
 	retAddr       uint64
 	StackFrame    []uint8
 	StackFrameStr string
+	LocalCalls    uint
 }
 
 type Register struct {

@@ -1,8 +1,10 @@
 package neoengine
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -16,6 +18,10 @@ func NewBinary() *Binary {
 }
 
 func (n *Binary) Open(binaryPath string) error {
+	if _, err := os.Stat(binaryPath); errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("unable to open file %s", binaryPath)
+	}
+
 	r2, err := r2pipe.NewNativePipe(binaryPath)
 
 	if err != nil {

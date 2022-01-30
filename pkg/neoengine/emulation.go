@@ -40,7 +40,8 @@ func (e *EmulationProfile) Emulate() (CPU, error) {
 }
 
 func (e *EmulationProfile) handleExec() (bool, FinishEmuReason) {
-	// First handle
+
+	//go First handle
 	if e.hasKnownEnd {
 		currentAddr := e.Binary.CurrentAddress()
 		currentAddr = strings.Trim(currentAddr, "\n")
@@ -55,7 +56,6 @@ func (e *EmulationProfile) handleExec() (bool, FinishEmuReason) {
 
 	// Hit invalid code aka end
 	if currInst.Type == "invalid" || currInst.Disasm == "invalid" {
-		// e.Binary.SetRegister()
 		return false, ReachEnd
 	}
 
@@ -68,8 +68,10 @@ func (e *EmulationProfile) handleExec() (bool, FinishEmuReason) {
 				return false, HitCall
 			}
 			e.Binary.StepOver()
+			return true, Continue
 		} else {
 			e.Binary.retAddr = e.Binary.NextInstAddr()
+			e.Binary.LocalCalls++
 		}
 
 		return true, Continue
@@ -93,8 +95,11 @@ func (e *EmulationProfile) handleExec() (bool, FinishEmuReason) {
 
 	// intel specific
 	if currInst.Disasm == "ret" {
-
-		e.Binary.SetRegister("rsp", e.Binary.retAddr)
+		if e.Binary.LocalCalls == 0 {
+			return false, ReachEnd
+		} else {
+			e.Binary.LocalCalls--
+		}
 	}
 
 	return true, Continue

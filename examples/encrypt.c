@@ -17,9 +17,19 @@ void decrypt() {
   puts(output);
 }
 
+
+void print_something() {
+  puts("Something nice");
+}
+
 int main() {
 
   decrypt();
+
+  int x = 100;
+  int y = x + y;
+  
+  print_something();
 
   return 0;
 }
