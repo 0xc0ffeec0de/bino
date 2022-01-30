@@ -110,7 +110,7 @@ func (n *Binary) GetCurrInstruction() Instruction {
 
 func (n *Binary) DisasmAt(address uint, numOpcodes uint) Instruction {
 	inst := Instruction{}
-	n.r2.Cmdjf("pdj %d @ %d ~{0}", &inst, numOpcodes, address)
+	n.r2.CmdjfStruct("pdj %d @ %d ~{0}", &inst, numOpcodes, address)
 
 	return inst
 }
