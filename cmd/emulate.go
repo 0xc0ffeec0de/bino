@@ -14,9 +14,11 @@ type Emulation struct {
 	binaryPath string
 	startAddr  string
 	endAddr    string
+	Arch       string
 
 	logSteps  bool
 	untilCall string
+	ShowRegs  []string
 }
 
 var emulationStruct = Emulation{}
@@ -45,6 +47,8 @@ var emulateCmd = &cobra.Command{
 			log.Fatalf("Error: %v\n", err)
 		}
 
+		fmt.Println("Starting emulation...")
+
 		emuProfile := neoengine.EmulationProfile{
 			Binary:       binary,
 			StartAddress: emulationStruct.startAddr,
@@ -58,13 +62,7 @@ var emulateCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		fmt.Println("Reading content of RDI...")
-		data, err := binary.ReadStrAt(uint(cpuState.RegisterState.RDI))
-
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("RDI => %s\n", data)
+		fmt.Println(cpuState.String())
 	},
 }
 
@@ -73,5 +71,8 @@ func init() {
 	emulateCmd.Flags().StringVar(&emulationStruct.startAddr, "start-at", "0x0", "Start address of the emulation")
 	emulateCmd.Flags().StringVar(&emulationStruct.endAddr, "until", "0x0", "Emulate until this address")
 	emulateCmd.Flags().StringVar(&emulationStruct.untilCall, "until-call", "", "Emulate until a function call")
+
+	// emulateCmd.Flags().StringSlice(&emulationStruct.ShowRegs, "show-regs", nil, "Show only registers specified in this paratemer, separeted by ','")
+
 	emulateCmd.Flags().BoolVar(&emulationStruct.logSteps, "log", false, "Log each step emulated")
 }

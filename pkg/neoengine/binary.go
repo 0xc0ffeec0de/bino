@@ -1,8 +1,10 @@
 package neoengine
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -16,23 +18,37 @@ func NewBinary() *Binary {
 }
 
 func (n *Binary) Open(binaryPath string) error {
+	if _, err := os.Stat(binaryPath); errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("unable to open file %s", binaryPath)
+	}
+
 	r2, err := r2pipe.NewNativePipe(binaryPath)
 
 	if err != nil {
-		return err
+		// try open non-native pip
+		if err.Error() == "Failed to open libr_core.so" {
+			log.Println("Unable to find libr_core.so, starting a radare process instead...")
+			r2, err = r2pipe.NewPipe(binaryPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+
 	}
 	n.r2 = r2
 	n.path = binaryPath
 	// Quiet mode
 
-	// Set up the in memory cache and code analysis
-	n.r2.Cmd("e io.cache=true; e bin.cache=true; aaaa 2> /dev/null")
+	// code analysis
+	n.r2.Cmd("e scr.color=0; e io.cache=true; aaaa 2> /dev/null")
 
 	// Map all imports
 	impList := []Import{}
 	n.imports = make(map[uint]Import)
 
-	n.r2.Cmdj("iij", &impList)
+	n.r2.CmdjStruct("iij", &impList)
 
 	for _, imp := range impList {
 		n.imports[imp.Plt] = imp
@@ -100,7 +116,6 @@ func (n *Binary) DisasmAt(address uint, numOpcodes uint) Instruction {
 }
 
 func (n *Binary) FlipZeroFlagIfSet() {
-
 	zf, _ := n.r2.Cmd("?vi `aer zf`")
 	zflag, _ := strconv.ParseInt(zf, 10, 8)
 	zflag = zflag & 0 // yep, make sure to always be zero
@@ -115,6 +130,16 @@ func (n *Binary) NextInstAddr() uint64 {
 	nextAddr, _ := strconv.ParseUint(nextAddrStr, 10, 64)
 
 	return nextAddr
+}
+
+func (n *Binary) BuildStackFrame() {
+	regs := n.Getx8664RegState()
+
+	n.StackFrame = []uint8{}
+	stackSize := regs.RSP - regs.RBP
+	n.r2.CmdjfStruct("xj %d @ rbp", &n.StackFrame, stackSize)
+	n.StackFrameStr, _ = n.r2.Cmdf("x %d @ rbp", stackSize)
+
 }
 
 func (n *Binary) SetRegister(regName string, value uint64) {

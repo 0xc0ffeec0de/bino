@@ -3,10 +3,14 @@ package neoengine
 import "github.com/0xc0ffeec0de/bino/pkg/r2pipe"
 
 type Binary struct {
-	r2      *r2pipe.Pipe
-	path    string
-	imports map[uint]Import
-	retAddr uint64
+	r2            *r2pipe.Pipe
+	Arch          string
+	path          string
+	imports       map[uint]Import
+	retAddr       uint64
+	StackFrame    []uint8
+	StackFrameStr string
+	LocalCalls    uint
 }
 
 type Register struct {
@@ -63,8 +67,14 @@ type Import struct {
 	Plt     uint   `json:"plt"`
 }
 
+type Stack struct {
+	StartOffset uint
+	EndOffset   uint
+}
+
 // Change to support more arch
-type Context struct {
+type CPU struct {
+	Bin           *Binary
 	RegisterState x8664Registers
 }
 
@@ -86,3 +96,21 @@ type x8664Registers struct {
 	R14 uint64 `json:"r14"`
 	R15 uint64 `json:"r15"`
 }
+
+type RegRef struct {
+	Role   string `json:"role"`
+	Reg    string `json:"reg"`
+	Value  string `json:"value"`
+	RefStr string `json:"refstr"`
+}
+
+//
+
+type FinishEmuReason int
+
+const (
+	HitCall FinishEmuReason = iota
+	ReachEnd
+	HitTarget
+	Continue
+)
