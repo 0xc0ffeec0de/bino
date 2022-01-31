@@ -2,7 +2,10 @@ package neoengine
 
 import (
 	"fmt"
+	"os"
 	"strings"
+
+	"github.com/olekukonko/tablewriter"
 )
 
 func (cpu *CPU) GetRegsRefs() (refs []RegRef) {
@@ -44,26 +47,26 @@ func (cpu *CPU) GetRegsRefs() (refs []RegRef) {
 }
 
 // Beautify this
-func (cpu CPU) String() string {
+func (cpu *CPU) PrintState() {
 
 	// First print register references
 	var refs []RegRef = cpu.GetRegsRefs()
-
-	regState := ""
-	out := ""
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"REG", "Value", "Ref"})
+	table.SetBorder(false)
+	// out := ""
+	values := make([][]string, 3)
 	for _, reg := range refs {
-		regState += fmt.Sprintf("%s = 0x%s", reg.Reg, reg.Value)
-		if reg.RefStr != "" {
-			regState += fmt.Sprintf(" => %s", reg.RefStr)
+
+		row := []string{
+			reg.Reg, fmt.Sprintf("0x%s", reg.Value), "",
 		}
-		regState += "\n"
 
+		if reg.RefStr != "" {
+			row[2] = reg.RefStr
+		}
+		values = append(values, row)
 	}
-	out += regState
-
-	if len(cpu.Bin.StackFrame) > 0 {
-		out += cpu.Bin.StackFrameStr
-	}
-
-	return out
+	table.AppendBulk(values)
+	table.Render() // Send output
 }

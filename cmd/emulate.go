@@ -62,7 +62,7 @@ var emulateCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		fmt.Println(cpuState.String())
+		cpuState.PrintState()
 	},
 }
 
