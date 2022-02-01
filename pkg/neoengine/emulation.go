@@ -27,6 +27,7 @@ func (e *EmulationProfile) Emulate() (CPU, error) {
 			case HitCall:
 				bin.BuildStackFrame()
 			}
+			bin.BuildStackFrame()
 			break
 		}
 	}

@@ -1,10 +1,8 @@
 package neoengine
 
 import (
-	"errors"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 
@@ -18,9 +16,6 @@ func NewBinary() *Binary {
 }
 
 func (n *Binary) Open(binaryPath string) error {
-	if _, err := os.Stat(binaryPath); errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("unable to open file %s", binaryPath)
-	}
 
 	r2, err := r2pipe.NewNativePipe(binaryPath)
 
@@ -44,6 +39,9 @@ func (n *Binary) Open(binaryPath string) error {
 	// code analysis
 	n.r2.Cmd("e scr.color=0; e io.cache=true; aaaa 2> /dev/null")
 
+	// Get binary info
+	n.binaryInfo = BinInfo{}
+	n.r2.CmdjStruct("ij", &n.binaryInfo)
 	// Map all imports
 	impList := []Import{}
 	n.imports = make(map[uint]Import)
@@ -135,10 +133,27 @@ func (n *Binary) NextInstAddr() uint64 {
 func (n *Binary) BuildStackFrame() {
 	regs := n.Getx8664RegState()
 
-	n.StackFrame = []uint8{}
-	stackSize := regs.RSP - regs.RBP
-	n.r2.CmdjfStruct("xj %d @ rbp", &n.StackFrame, stackSize)
-	n.StackFrameStr, _ = n.r2.Cmdf("x %d @ rbp", stackSize)
+	bitMode := uint64(n.binaryInfo.Bin.Bits / 8)
+	var stackSize uint64
+
+	if regs.RBP > regs.RSP {
+		stackSize = regs.RBP - regs.RSP
+	} else {
+		stackSize = regs.RSP - regs.RBP
+	}
+
+	stackSize %= 1024
+
+	n.StackFrame = make([][]uint8, stackSize/bitMode)
+
+	for i := 0; i < len(n.StackFrame); i++ {
+		byteSlice := []uint8{}
+		n.r2.CmdjfStruct("xj %d @ rsp+%d", &byteSlice, bitMode, uint64(i)*bitMode)
+		n.StackFrame[i] = byteSlice
+	}
+
+	n.StackFrameStr, _ = n.r2.Cmdf("x -%d @ rbp", stackSize)
+	n.StackAddress = uint(regs.RBP)
 
 }
 

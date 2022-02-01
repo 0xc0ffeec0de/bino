@@ -43,6 +43,12 @@ var emulateCmd = &cobra.Command{
 		target := args[0]
 		// TODO: Create a log library
 		fmt.Printf("Opening %s...\n", target)
+		if _, err := os.Stat(target); errors.Is(err, os.ErrNotExist) {
+			log.Fatalf("unable to open file %s", target)
+		}
+
+		fmt.Println("Starting code analysis, this might take a while...")
+
 		if err := binary.Open(target); err != nil {
 			log.Fatalf("Error: %v\n", err)
 		}
@@ -62,7 +68,7 @@ var emulateCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		fmt.Println(cpuState.String())
+		cpuState.PrintState()
 	},
 }
 
