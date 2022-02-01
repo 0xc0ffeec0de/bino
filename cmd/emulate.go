@@ -16,7 +16,7 @@ type Emulation struct {
 	endAddr    string
 	Arch       string
 
-	logSteps  bool
+	// logSteps  bool
 	untilCall string
 	ShowRegs  []string
 }
@@ -80,5 +80,5 @@ func init() {
 
 	// emulateCmd.Flags().StringSlice(&emulationStruct.ShowRegs, "show-regs", nil, "Show only registers specified in this paratemer, separeted by ','")
 
-	emulateCmd.Flags().BoolVar(&emulationStruct.logSteps, "log", false, "Log each step emulated")
+	// emulateCmd.Flags().BoolVar(&emulationStruct.logSteps, "log", false, "Log each step emulated")
 }

@@ -80,6 +80,8 @@ func (cpu *CPU) PrintState() {
 				r := rune(b)
 				if unicode.IsLetter(r) {
 					ref += fmt.Sprintf("%c", b)
+				} else {
+					ref += " "
 				}
 				joinValue += fmt.Sprintf("%x", b)
 			}
