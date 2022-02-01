@@ -2,10 +2,10 @@
 
 
 ![Bino](images/bino.png)
+[![Go](https://github.com/0xc0ffeec0de/Bino/actions/workflows/go.yml/badge.svg)](https://github.com/0xc0ffeec0de/Bino/actions/workflows/go.yml)
 
 Bino it's a binary emulation tool written in Golang and powered by Radare that is able to emulate executable instructions from PE, ELF and Mach-O. It can be used to evaluate encryption and decryption routines, check the CPU state in some block of code and to "execute" different architecture code and acelerate a lot of reverse engineering tasks. 
 
-[![Go](https://github.com/0xc0ffeec0de/Bino/actions/workflows/go.yml/badge.svg)](https://github.com/0xc0ffeec0de/Bino/actions/workflows/go.yml)
 
 ## Example usage
 
