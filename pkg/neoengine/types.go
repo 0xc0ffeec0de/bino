@@ -8,15 +8,24 @@ type Binary struct {
 	path          string
 	imports       map[uint]Import
 	retAddr       uint64
-	StackFrame    []uint8
+	StackFrame    [][]uint8
 	StackFrameStr string
+	StackAddress  uint
 	LocalCalls    uint
+	binaryInfo    BinInfo
 }
 
 type Register struct {
 	RegName string
 	Arch    int
 	Mode    int
+}
+
+type BinInfo struct {
+	Bin struct {
+		Arch string `json:"arch"`
+		Bits int64  `json:"bits"`
+	} `json:"bin"`
 }
 
 type EmulationProfile struct {
@@ -103,8 +112,6 @@ type RegRef struct {
 	Value  string `json:"value"`
 	RefStr string `json:"refstr"`
 }
-
-//
 
 type FinishEmuReason int
 
