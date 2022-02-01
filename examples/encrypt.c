@@ -1,10 +1,9 @@
 #include <stdio.h>
 
-const char* enc_data="\x00\x00\x00\x00\x00\x00\x17\x15\x1a\x06\x1c\x06";
-#define enc_data_size 12
-const char* enc_key="\x73\x74\x72\x69\x6e\x67";
-#define enc_key_size 6
-
+const char* enc_data="\x00\x00\x00\x00\x18\x11\xb\xa\x01\x08";
+#define enc_data_size 10
+const char* enc_key="\x63\x6f\x6f\x6c\x6b\x65\x79";
+#define enc_key_size 7
 
 void decrypt() {
   char output[enc_data_size] = { 0 };
