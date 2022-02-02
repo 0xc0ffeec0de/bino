@@ -1,8 +1,7 @@
 # Bino - A emulation tool for your RE arsenal 💻 (BETA)
-
+[![Go](https://github.com/0xc0ffeec0de/Bino/actions/workflows/go.yml/badge.svg)](https://github.com/0xc0ffeec0de/Bino/actions/workflows/go.yml)
 
 ![Bino](images/bino.png)
-[![Go](https://github.com/0xc0ffeec0de/Bino/actions/workflows/go.yml/badge.svg)](https://github.com/0xc0ffeec0de/Bino/actions/workflows/go.yml)
 
 Bino it's a binary emulation tool written in Golang and powered by Radare's ESIL (Evaluable String Intermediate Language) that is able to emulate executable instructions from PE, ELF and Mach-O. 
 
