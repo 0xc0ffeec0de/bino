@@ -70,7 +70,7 @@ In order to install you will need,
 After install radare2, you can install simple by typing:
 
 ```
-$ go get github.com/0xc0ffeec0de/Bino
+$ go get github.com/0xc0ffeec0de/bino
 $ echo export PATH=$PATH:$(go env GOPATH)/bin/ >> ~/.bashrc
 ```
 
