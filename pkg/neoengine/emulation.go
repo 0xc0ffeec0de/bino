@@ -11,22 +11,14 @@ func (e *EmulationProfile) Emulate() (CPU, error) {
 	}
 
 	var bin *Binary = e.Binary
-	bin.SetUpEsil()
-
 	// Set up ESIL
 	bin.SeekTo(e.StartAddress)
 	bin.SetUpEsil()
 
 	for {
 		bin.Step()
-		shouldCont, reason := e.handleExec() // Apply any kind of constraints in this emulation scenario
+		shouldCont, _ := e.handleExec() // Apply any kind of constraints in this emulation scenario
 		if !shouldCont {
-			switch reason {
-			// Just hit a hunted call, build the stack frame here
-			// because the stackframe yet exists
-			case HitCall:
-				bin.BuildStackFrame()
-			}
 			bin.BuildStackFrame()
 			break
 		}
